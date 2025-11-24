@@ -21,6 +21,13 @@ const HOMEBREW_AUTO_SCAN_PATHS = ["/data/homebrew/", "/mnt/usb0/homebrew/",
 				  "/mnt/usb3/homebrew/", "/mnt/usb4/homebrew/",
 				  "/mnt/usb5/homebrew/", "/mnt/usb6/homebrew/",
 				  "/mnt/ext0/homebrew/", "/mnt/ext1/homebrew/"];
+
+const HOMEBREW_AUTO_SCAN_PATH_LISTFILES = ["/data/homebrew.lst", "/mnt/usb0/homebrew.lst",
+				  "/mnt/usb1/homebrew.lst", "/mnt/usb2/homebrew.lst",
+				  "/mnt/usb3/homebrew.lst", "/mnt/usb4/homebrew.lst",
+				  "/mnt/usb5/homebrew.lst", "/mnt/usb6/homebrew.lst",
+				  "/mnt/ext0/homebrew.lst", "/mnt/ext1/homebrew.lst"];
+
 // order of this matters, if both homebrew.js and eboot.elf exist, homebrew.js will be used
 const HOMEBREW_AUTO_SCAN_ALLOWED_EXEC_NAMES = [ "homebrew.js", "eboot.elf" ];
 
@@ -132,6 +139,25 @@ function getHomebrewList() {
 
 async function scanHomebrews() {
     let jobs = [];
+    for (let file of HOMEBREW_AUTO_SCAN_PATH_LISTFILES) {
+        let filePath = file.substring(0, file.lastIndexOf("/") + 1);
+        let dirList = await ApiClient.fsGetFileText(file);
+        if (dirList.data !== null) {
+            for (let dir of dirList.data.split(/\r?\n/)) {
+                dir = dir.trim();
+                if (dir !== "") {
+                    if (!dir.startsWith("/")) {
+                        dir = filePath + dir;
+                    }
+
+                    if (!HOMEBREW_AUTO_SCAN_PATHS.includes(dir)) {
+                        HOMEBREW_AUTO_SCAN_PATHS.push(dir);
+                    }
+                }
+            }
+        }
+    }
+
     for (let path of HOMEBREW_AUTO_SCAN_PATHS) {
         jobs.push((async () => {
             let autoScanParentDirEntryList = await ApiClient.fsListDir(path);
