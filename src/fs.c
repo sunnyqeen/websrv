@@ -122,6 +122,7 @@ dir_read_json(void *cls, uint64_t pos, char *buf, size_t max) {
   dir_read_sm_t* sm = cls;
   struct dirent *e;
   struct stat st;
+  size_t len = strlen(sm->path);
 
   if(max < 512) {
     return 0;
@@ -142,7 +143,9 @@ dir_read_json(void *cls, uint64_t pos, char *buf, size_t max) {
     }
 
     strncpy(sm->buf, sm->path, PATH_MAX);
-    strncat(sm->buf, "/", PATH_MAX);
+    if (sm->path[len - 1] != '/') {
+      strncat(sm->buf, "/", PATH_MAX);
+    }
     strncat(sm->buf, e->d_name, PATH_MAX);
 
 
@@ -170,6 +173,7 @@ static ssize_t
 dir_read_html(void *cls, uint64_t pos, char *buf, size_t max) {
   dir_read_sm_t* sm = cls;
   struct dirent *e;
+  size_t len = strlen(sm->path);
 
   if(max < 512) {
     return 0;
@@ -198,8 +202,10 @@ dir_read_html(void *cls, uint64_t pos, char *buf, size_t max) {
     if(e->d_name[0] == '.') {
       return 0;
     }
-    return snprintf(buf, max, "<li><a href=\"%s\">%s</a></li>",
-		    e->d_name, e->d_name);
+
+    return snprintf(buf, max, "<li><a href=\"/fs%s%s%s\">%s</a></li>",
+            sm->path, (sm->path[len - 1] == '/') ? "" : "/",
+            e->d_name, e->d_name);
   }
 
   if(sm->state == 2) {
