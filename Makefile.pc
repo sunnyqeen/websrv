@@ -20,6 +20,7 @@ PYTHON ?= python3
 
 BIN   := websrv.pc
 SRCS   := src/main.c src/websrv.c src/asset.c src/fs.c src/mime.c
+SRCS   += src/hwmonitor.c
 SRCS   += src/mdns.c
 SRCS   += src/pc/sys.c
 
